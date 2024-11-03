@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./my-app:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d
+    depends_on:
+      - app
+      - db
+      - mongo
+    networks:
+        - local-network
+
+  db:
+    container_name: mysql
+    image: mysql:latest
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: my_sql_db
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+        - local-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+        - 37017:27017
+    container_name: mongo-container
+    volumes:
+        - mongo-volume:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 4000M
+        reservations:
+          memory: 4000M
+    environment:
+    - MONGO_INITDB_DATABASE=my_mongo_db
+    - MONGO_INITDB_ROOT_USERNAME=
+    - MONGO_INITDB_ROOT_PASSWORD=
+    networks:
+        - local-network
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 3400:80
+    depends_on:
+      - db
+    networks:
+        - local-network
+
+  app:
+      container_name: my-app-container
+      build:
+        context: ./php
+        dockerfile: Dockerfile
+      volumes:
+        - ./my-app:/var/www
+      ports:
+        - "9000:9000"
+      working_dir: /var/www
+      depends_on:
+        - db
+        - mongo
+      networks:
+          - local-network
+
+  # pythonscript:
+  #     image: python/script
+  #     container_name: python-script
+  #     build:
+  #       context: ./python
+  #       dockerfile: Dockerfile
+  #     volumes:
+  #     - ./python:/python-script
+
+volumes:
+    mongo-volume:
+        name: mongo-volume
+networks:
+    local-network:
+
