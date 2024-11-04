@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   nginx:
-    container_name: nginx
+    container_name: nginx-container
     image: nginx:alpine
     ports:
       - "8080:80"
@@ -17,7 +17,7 @@ services:
         - local-network
 
   db:
-    container_name: mysql
+    container_name: mysql-container
     image: mysql:latest
     ports:
       - "4306:3306"
@@ -50,7 +50,7 @@ services:
         - local-network
 
   phpmyadmin:
-    container_name: phpmyadmin
+    container_name: phpmyadmin-container
     image: phpmyadmin/phpmyadmin
     ports:
       - 3400:80
@@ -72,17 +72,18 @@ services:
       depends_on:
         - db
         - mongo
+        - python-app
       networks:
           - local-network
 
-  # pythonscript:
-  #     image: python/script
-  #     container_name: python-script
-  #     build:
-  #       context: ./python
-  #       dockerfile: Dockerfile
-  #     volumes:
-  #     - ./python:/python-script
+  python-app:
+      container_name: python-container
+      build:
+        context: ./python
+        dockerfile: Dockerfile
+      volumes:
+        - ./python-scripts:/python-scripts
+      command: tail -f /dev/null # Keeps the container running
 
 volumes:
     mongo-volume:
